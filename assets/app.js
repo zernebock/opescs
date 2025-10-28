@@ -171,37 +171,77 @@
   }
 
   // ---------- Questions loader ----------
-  async function loadQuestions() {
-    try {
-      const resp = await fetch('data/questions.json', { cache: 'no-store' });
-      if (!resp.ok) throw new Error('no json');
-      const q = await resp.json();
-      if (Array.isArray(q) && q.length) {
-        state.questions = q;
-        return;
-      }
-      throw new Error('empty');
-    } catch (e) {
-      // Fallback: inline JSON block
-      const el = document.getElementById('inlineQuestions');
-      if (el) {
-        try {
-          const parsed = JSON.parse(el.textContent);
-          if (Array.isArray(parsed) && parsed.length) {
-            state.questions = parsed;
-            return;
-          }
-        } catch (err) {
-          // fallthrough to minimal sample
-        }
-      }
+	async function loadQuestions() {
+	  // 1) Try fetching data/questions.json
+	  try {
+		const resp = await fetch('data/questions.json', { cache: 'no-store' });
+		if (resp.ok) {
+		  const q = await resp.json();
+		  if (Array.isArray(q) && q.length) {
+			state.questions = q;
+			return;
+		  }
+		}
+	  } catch (e) {
+		// fetch failed — we'll try fallbacks below
+	  }
 
-      // Minimal fallback sample
-      state.questions = [
-        { id: 1, question: 'Pregunta de ejemplo: no hay datos cargados', options: ['A) Opc1', 'B) Opc2', 'C) Opc3', 'D) Opc4'], correctAnswer: 'A' }
-      ];
-    }
-  }
+	  // 2) Try global variable `questions` (the original inline JS array)
+	  try {
+		if (Array.isArray(window.questions) && window.questions.length) {
+		  state.questions = window.questions;
+		  return;
+		}
+	  } catch (e) {
+		// ignore
+	  }
+
+	  // 3) Try inline JSON element with id="inlineQuestions"
+	  try {
+		const inlineEl = document.getElementById('inlineQuestions');
+		if (inlineEl) {
+		  const parsed = JSON.parse(inlineEl.textContent);
+		  if (Array.isArray(parsed) && parsed.length) {
+			state.questions = parsed;
+			return;
+		  }
+		}
+	  } catch (e) {
+		// ignore parse errors
+	  }
+
+	  // 4) Try to find a <script> that contains `const questions = [ ... ];` and evaluate the array
+	  //    This handles cases where the page embeds the array as JS (not as a global var yet)
+	  try {
+		const scripts = document.getElementsByTagName('script');
+		for (let i = 0; i < scripts.length; i++) {
+		  const t = scripts[i].textContent;
+		  if (!t || t.indexOf('const questions') === -1) continue;
+		  // Try to capture the array text
+		  const m = t.match(/const\s+questions\s*=\s*(\[[\s\S]*?\])\s*;/m);
+		  if (m && m[1]) {
+			// Use a safe eval - wrap in parentheses to evaluate an array literal
+			try {
+			  // eslint-disable-next-line no-eval
+			  const arr = eval('(' + m[1] + ')');
+			  if (Array.isArray(arr) && arr.length) {
+				state.questions = arr;
+				return;
+			  }
+			} catch (e) {
+			  // eval failed, continue to next script
+			}
+		  }
+		}
+	  } catch (e) {
+		// ignore
+	  }
+
+	  // 5) Last resort: minimal fallback so the app does not break
+	  state.questions = [
+		{ id: 1, question: 'No hay preguntas cargadas', options: ['A) -', 'B) -', 'C) -', 'D) -'], correctAnswer: 'A' }
+	  ];
+	}
 
   // ---------- Helpers ----------
   function pickQuestions(count) {
