@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulador de Examen de Enfermería - SCS</title>
+  <link rel="stylesheet" href="assets/style.min.css">
+</head>
+<body>
+  <div class="container" id="app">
+    <div id="startScreen" class="start-screen">
+      <h2>Simulador de Examen de Enfermería</h2>
+
+      <div class="exam-info" aria-hidden="false">
+        <p><strong>Oferta de Empleo Público 2016-17-18 - estabilización</strong></p>
+        <p><a href="https://www3.gobiernodecanarias.org/sanidad/scs/organica.jsp?idCarpeta=b8cf85ba-fc1a-11dd-a72f-93771b0e33f6" target="_blank" rel="noopener noreferrer">Accede a la documentación oficial</a></p>
+      </div>
+
+      <div class="config-section" aria-labelledby="configTitle">
+        <h3 id="configTitle">Configuración del Simulador</h3>
+
+        <div class="config-group">
+          <label for="questionCount">Número de preguntas:</label>
+          <input id="questionCount" type="number" min="1" max="90" value="20" />
+          <div class="info-text">Examen oficial: 90 preguntas</div>
+        </div>
+
+        <div class="config-group">
+          <label>
+            <input type="checkbox" id="enableTimer" />
+            Activar temporizador
+          </label>
+          <div class="info-text">Duración oficial: 120 minutos</div>
+        </div>
+
+        <div class="config-group" id="timerConfig" style="display:none">
+          <label for="timerMinutes">Duración (minutos):</label>
+          <input id="timerMinutes" type="number" min="1" value="27" />
+        </div>
+
+        <div class="category-mix">
+          <h4>Distribución de Preguntas</h4>
+          <p>Configura los porcentajes (total debe ser 100%):</p>
+
+          <div class="percentage-controls">
+            <div class="percentage-control">
+              <span class="percentage-label">Preguntas nuevas:</span>
+              <input id="newPercentage" class="percentage-slider" type="range" min="0" max="100" value="80" />
+              <span id="newValue" class="percentage-value">80%</span>
+              <input id="newInput" class="percentage-input" type="number" min="0" max="100" value="80" />%
+            </div>
+
+            <div class="percentage-control">
+              <span class="percentage-label">Preguntas falladas:</span>
+              <input id="incorrectPercentage" class="percentage-slider" type="range" min="0" max="100" value="15" />
+              <span id="incorrectValue" class="percentage-value">15%</span>
+              <input id="incorrectInput" class="percentage-input" type="number" min="0" max="100" value="15" />%
+            </div>
+
+            <div class="percentage-control">
+              <span class="percentage-label">Preguntas acertadas:</span>
+              <input id="correctPercentage" class="percentage-slider" type="range" min="0" max="100" value="5" />
+              <span id="correctValue" class="percentage-value">5%</span>
+              <input id="correctInput" class="percentage-input" type="number" min="0" max="100" value="5" />%
+            </div>
+
+            <div id="percentageTotal" class="percentage-total">Total: 100%</div>
+            <button id="resetPercentages" class="reset-percentages" type="button">Restablecer valores por defecto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-container">
+        <h3>Tu Progreso</h3>
+        <div id="progressStats">Cargando estadísticas...</div>
+
+        <div class="pie-chart-container" aria-hidden="true">
+          <div class="pie-chart" id="pieChart" role="img" aria-label="Distribución preguntas"></div>
+          <div class="pie-legend" id="pieLegend"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="startButton">Comenzar Examen</button>
+        <button id="resetHistoryButton" class="danger" style="background:var(--danger)">Reiniciar Historial</button>
+      </div>
+    </div>
+
+    <div id="examContainer" class="hidden" aria-live="polite">
+      <h1>Examen de Enfermería</h1>
+      <div class="timer" id="timer">Tiempo: --:--</div>
+
+      <div class="progress-container">
+        <div class="progress-bar" aria-hidden="true"><div id="progressBar" class="progress" style="width:0%"></div></div>
+        <div id="progressText" class="progress-text">Pregunta 1 de 20</div>
+      </div>
+
+      <div class="question-container">
+        <div id="questionNumber" class="question-number">Pregunta 1</div>
+        <div id="questionText" class="question-text"></div>
+
+        <div id="optionsContainer" class="options-container" role="list"></div>
+
+        <div class="navigation">
+          <button id="prevButton" class="secondary" disabled>Anterior</button>
+          <button id="nextButton">Siguiente</button>
+          <button id="finishButton" class="hidden" type="button">Finalizar Examen</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultsContainer" class="results-container hidden">
+      <h2>Resultados del Examen</h2>
+
+      <div class="quick-stats">
+        <div class="stat-box"><div id="correctCount" class="stat-value correct-stat">0</div><div class="stat-label">Correctas</div></div>
+        <div class="stat-box"><div id="incorrectCount" class="stat-value incorrect-stat">0</div><div class="stat-label">Incorrectas</div></div>
+        <div class="stat-box"><div id="unansweredCount" class="stat-value unanswered-stat">0</div><div class="stat-label">Sin responder</div></div>
+      </div>
+
+      <div class="score" id="score">Puntuación: 0/20</div>
+      <p id="resultMessage"></p>
+
+      <div id="reviewContainer" class="review-container"></div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+        <button id="restartButton">Volver al Inicio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- app and a11y -->
+  <script src="https://unpkg.com/axe-core@4.6.3/axe.min.js"></script>
+  <script src="assets/app.min.js"></script>
+
+  <!-- fallback inline questions: used if data/questions.json cannot be fetched.
+       NOTE: this block is maintained as a fallback for backward-compatibility;
+       once data/questions.json contains your full 540-question set you may remove it. -->
+  <script id="inlineQuestions" type="application/json">
+  [
+    {"id":1,"question":"La metodología enfermera es un proceso tan común ... Según R. Alf[...]","options":["A) Tres fases","B) Cuatro fases","C) Cinco fases","D) Seis fases"],"correctAnswer":"C"},
+    {"id":2,"question":"Según Marjory Gordon la respuesta humana ...","options":["A) Fisiológicas","B) Psicológicas","C) Sociales o espirituales","D) Biológicas"],"correctAnswer":"D"},
+    {"id":3,"question":"Se habla del juicio clínico enfermero ...","options":["A) Juicio diagnóstico y juicio terapéutico","B) Juicio diagnóstico y juicio ejecutivo","C) Juicio primario y juicio secundario","D) Ninguna respuesta es correcta"],"correctAnswer":"A"},
+    {"id":4,"question":"En relación a la Escala de coma de Glasgow, es CORRECTO que:","options":["A) Valora la fuerza muscular, reflejos y movilización.","B) Valora la apertura de ojos, la respuesta motora y la respuesta verbal.","C) Su puntuación oscila de 0-10 puntos.","D) Es muy útil en la valoración del trauma medular"],"correctAnswer":"B"},
+    {"id":5,"question":"Según Virginia Henderson, el Metaparadigma comprende los siguientes elementos : seleccione la opción INCORRECTA","options":["A) Salud","B) Entorno","C) Creencias","D) Persona"],"correctAnswer":"C"},
+    {"id":6,"question":"El humanista estadounidense A. Maslow establece una jerarquía ...","options":["A) Primer nivel: Afiliación y afecto","B) Segundo nivel: seguridad","C) Tercer nivel: Estima","D) Cuarto nivel: Fisiológico"],"correctAnswer":"B"},
+    {"id":7,"question":"En relación a los síntomas más comunes del ACV ...","options":["A) Hemiparesias, vértigo intenso, dificultad para deglutir. Dificultad para mantener el equilibrio y/o coordinación.","B) Alteración del nivel de conciencia ...","C) Problemas visuales, auditivos y del tacto. Alteración emocional. Afasia. Pérdida de control de esfínteres.","D) Todas las respuestas son correctas."],"correctAnswer":"D"},
+    {"id":8,"question":"Entre los cuidados de enfermería en pacientes que han sufrido un Accidente cerebro vascular, señala la respuesta incorrecta:","options":["A) Promover la aducción del hombro","B) Promover cambio de posiciones","C) Establecer un programa de ejercicios","D) Mantener la integridad cutánea"],"correctAnswer":"A"},
+    {"id":9,"question":"Entre los cuidados de enfermería en pacientes con Epilepsia, señala la respuesta correcta:","options":["A) Colocar al paciente de forma inadecuada para evitar la aspiración","B) Realizar una valoración del riesgo general sobre el paciente.","C) Explicar exclusivamente al paciente la acción y los efectos secundarios esperados de la medicación","D) Vigilar el nivel de conciencia, reflejo de la tos, reflejo de gases y capacidad deglutoria."],"correctAnswer":"D"},
+    {"id":10,"question":"La definición de Autocuidado según Dorotea Orem es : seleccione la opción CORRECTA","options":["A) El conjunto de acciones intencionadas ...","B) El conjunto de actuaciones ...","C) El conjunto de acciones que realiza la persona ...","D) El conjunto de decisiones ..."],"correctAnswer":"A"}
+    /* ... include the rest of your 540 questions here if you want inline fallback to be complete ... */
+  ]
+  </script>
+</body>
+</html>

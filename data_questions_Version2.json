@@ -1,0 +1,33 @@
+[
+  {
+    "id": 1,
+    "question": "La metodología enfermera es un proceso tan común ... Según R. Alf[...]",
+    "options": ["A) Tres fases", "B) Cuatro fases", "C) Cinco fases", "D) Seis fases"],
+    "correctAnswer": "C"
+  },
+  {
+    "id": 2,
+    "question": "Según Marjory Gordon la respuesta humana ...",
+    "options": ["A) Fisiológicas", "B) Psicológicas", "C) Sociales o espirituales", "D) Biológicas"],
+    "correctAnswer": "D"
+  },
+  {
+    "id": 3,
+    "question": "Se habla del juicio clínico enfermero ...",
+    "options": ["A) Juicio diagnóstico y juicio terapéutico", "B) Juicio diagnóstico y juicio ejecutivo", "C) Juicio primario y juicio secundario", "D) Ninguna respuesta es correcta"],
+    "correctAnswer": "A"
+  },
+  {
+    "id": 4,
+    "question": "En relación a la Escala de coma de Glasgow, es CORRECTO que:",
+    "options": ["A) Valora la fuerza muscular, reflejos y movilización.", "B) Valora la apertura de ojos, la respuesta motora y la respuesta verbal.", "C) Su puntuación oscila de 0-10 puntos.", "D) Es muy útil en la valoración del trauma medular"],
+    "correctAnswer": "B"
+  },
+  {
+    "id": 5,
+    "question": "Según Virginia Henderson, el Metaparadigma comprende los siguientes elementos : seleccione la opción INCORRECTA",
+    "options": ["A) Salud", "B) Entorno", "C) Creencias", "D) Persona"],
+    "correctAnswer": "C"
+  }
+  /* Replace this sample list with your full 540-question array. The app will fetch this file at runtime. */
+]
