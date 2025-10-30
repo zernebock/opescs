@@ -230,7 +230,7 @@ async function loadQuestions() {
         './questions.json',
         `${derivedBase}questions.json`,
         // Raw GitHub fallback (uses repo and commitOID from your message)
-        'https://raw.githubusercontent.com/zernebock/opescs/bf7c8fb546cf438fd07eea6a13fbf0d3b37c8484/questions.json'
+        'https://raw.githubusercontent.com/zernebock/opescs/main/questions.json'
     ];
 
     // Helper to fetch with timeout
