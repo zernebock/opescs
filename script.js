@@ -213,45 +213,115 @@ function checkResources() {
     }
 }
 
-// Cargar preguntas desde JSON
+// Robust loadQuestions with multiple fallbacks, timeout, and improved validation
 async function loadQuestions() {
-    try {
-        console.log('Intentando cargar questions.json...');
-        const response = await fetch('questions.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const questions = await response.json();
-        
-        // Validar estructura de preguntas
-        if (!Array.isArray(questions)) {
-            throw new Error('El archivo JSON no contiene un array de preguntas');
-        }
-        
-        // Validar que cada pregunta tenga la estructura correcta
-        const validQuestions = questions.filter(q => 
-            q.id && 
-            q.question && 
-            Array.isArray(q.options) && 
-            q.options.length === 4 && 
-            q.correctAnswer
-        );
-        
-        if (validQuestions.length === 0) {
-            throw new Error('No se encontraron preguntas válidas en el archivo JSON');
-        }
-        
-        AppState.questions = validQuestions;
-        console.log(`Preguntas cargadas desde JSON: ${AppState.questions.length}`);
-        return true;
-    } catch (error) {
-        console.warn('Error cargando questions.json, usando preguntas de ejemplo:', error);
-        Utils.showWarning(DOM.jsonWarning, 'No se pudo cargar el archivo de preguntas. Se usarán preguntas de ejemplo.');
-        AppState.questions = fallbackQuestions;
-        return false;
-    }
-}
+    const timeoutMs = 8000; // 8s timeout for each attempt
 
+    // Candidate URLs to try (relative first, then derived absolute, then raw.githubusercontent fallback)
+    const derivedBase = (() => {
+        // derive base path (folder of current document)
+        const path = location.pathname;
+        const dir = path.replace(/\/[^\/]*$/, '/'); // remove last segment
+        return `${location.origin}${dir}`;
+    })();
+
+    const candidates = [
+        'questions.json',
+        './questions.json',
+        `${derivedBase}questions.json`,
+        // Raw GitHub fallback (uses repo and commitOID from your message)
+        'https://raw.githubusercontent.com/zernebock/opescs/bf7c8fb546cf438fd07eea6a13fbf0d3b37c8484/questions.json'
+    ];
+
+    // Helper to fetch with timeout
+    const fetchWithTimeout = async (url, ms) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), ms);
+        try {
+            const response = await fetch(url, { signal: controller.signal, cache: 'no-cache' });
+            clearTimeout(id);
+            return response;
+        } catch (err) {
+            clearTimeout(id);
+            throw err;
+        }
+    };
+
+    // Validate question structure more robustly
+    const isValidQuestion = (q) => {
+        if (!q || typeof q !== 'object') return false;
+        if (!('id' in q) || !q.question || !Array.isArray(q.options)) return false;
+        // allow exactly 4 options ideally, but tolerate >=2
+        if (q.options.length < 2) return false;
+        // correctAnswer should be a letter or an index; normalize both cases
+        if (!q.correctAnswer) return false;
+        // Accept correctAnswer as "A"/"B"/... or numeric string or number index
+        const ca = (typeof q.correctAnswer === 'string') ? q.correctAnswer.trim() : String(q.correctAnswer);
+        if (!/^[A-Za-z]$/.test(ca) && !/^\d+$/.test(ca)) return false;
+        // If letter, ensure it maps to an existing option (A -> index 0)
+        if (/^[A-Za-z]$/.test(ca)) {
+            const idx = ca.toUpperCase().charCodeAt(0) - 65;
+            if (idx < 0 || idx >= q.options.length) return false;
+        } else {
+            const idx = parseInt(ca, 10);
+            if (isNaN(idx) || idx < 0 || idx >= q.options.length) return false;
+        }
+        return true;
+    };
+
+    for (const url of candidates) {
+        try {
+            console.log(`Intentando cargar preguntas desde: ${url}`);
+            const response = await fetchWithTimeout(url, timeoutMs);
+            if (!response.ok) {
+                console.warn(`Fetch OK false for ${url} status=${response.status}`);
+                continue;
+            }
+            const questions = await response.json();
+            if (!Array.isArray(questions)) {
+                console.warn(`El JSON en ${url} no es un array.`);
+                continue;
+            }
+
+            // Filter valid questions
+            const validQuestions = questions.filter(isValidQuestion);
+            if (validQuestions.length === 0) {
+                console.warn(`No se encontraron preguntas válidas en ${url} (validQuestions.length=0).`);
+                continue;
+            }
+
+            // Normalize correctAnswer to uppercase letters (A,B,C,...) for compatibility
+            const normalized = validQuestions.map(q => {
+                let correct = q.correctAnswer;
+                if (typeof correct === 'number') {
+                    correct = String.fromCharCode(65 + correct);
+                } else if (/^\d+$/.test(String(correct).trim())) {
+                    correct = String.fromCharCode(65 + parseInt(String(correct).trim(), 10));
+                } else {
+                    correct = String(correct).trim().toUpperCase();
+                }
+                return Object.assign({}, q, { correctAnswer: correct });
+            });
+
+            AppState.questions = normalized;
+            console.log(`Preguntas cargadas desde JSON (${url}): ${AppState.questions.length}`);
+            return true;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.warn(`Timeout al intentar cargar ${url}`);
+            } else {
+                console.warn(`Error cargando ${url}:`, err);
+            }
+            // try next candidate
+        }
+    }
+
+    // All attempts failed => fallback
+    console.warn('No se pudo cargar questions.json desde ninguna ruta, usando preguntas de ejemplo.');
+    Utils.showWarning(DOM.jsonWarning, 'No se pudo cargar el archivo de preguntas. Se usarán preguntas de ejemplo.');
+    AppState.questions = fallbackQuestions;
+    return false;
+}
 // Inicialización
 async function initializeApp() {
     console.log('Inicializando aplicación...');
