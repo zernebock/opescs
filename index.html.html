@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Examen de Enfermería - SCS</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <h2>Simulador de Examen de Enfermería</h2>
+            
+            <div class="card card-primary">
+                <div class="exam-info">
+                    <p><strong>Oferta de Empleo Público 2016-17-18-estabilización</strong></p>
+                    <div class="exam-details">
+                        <p><strong>Convocatoria Oficial:</strong></p>
+                        <ul>
+                            <li>540 preguntas en el repertorio oficial</li>
+                            <li>90 preguntas en el examen</li>
+                            <li>Duración: 120 minutos</li>
+                            <li><strong>Importante:</strong> Las respuestas correctas puntúan positivamente. Las preguntas no contestadas y las contestadas erróneamente no penalizan.</li>
+                        </ul>
+                    </div>
+                    <p><a href="https://www3.gobiernodecanarias.org/sanidad/scs/organica.jsp?idCarpeta=b8cf85ba-fc1a-11dd-a72f-93771b0e33f6" target="_blank">
+                        <span class="material-icons">open_in_new</span>Accede a toda la documentación publicada en el SCS
+                    </a></p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="config-section">
+                    <h3>Configuración del Simulador</h3>
+                    
+                    <div class="config-group">
+                        <label for="questionCount">Número de preguntas:</label>
+                        <div class="mdc-text-field">
+                            <input type="number" id="questionCount" min="1" max="90" value="20">
+                        </div>
+                        <div class="info-text">Examen oficial: 90 preguntas</div>
+                    </div>
+                    
+                    <div class="mdc-checkbox">
+                        <input type="checkbox" id="enableTimer">
+                        <label for="enableTimer">Activar temporizador</label>
+                    </div>
+                    <div class="info-text">Duración oficial: 120 minutos</div>
+                    
+                    <div class="config-group" id="timerConfig" style="display: none;">
+                        <label for="timerMinutes">Duración (minutos):</label>
+                        <div class="mdc-text-field">
+                            <input type="number" id="timerMinutes" min="1" value="27">
+                        </div>
+                    </div>
+                    
+                    <div class="card card-warning">
+                        <div class="category-mix">
+                            <h4>Distribución de Preguntas</h4>
+                            <p>Configura los porcentajes (total debe ser 100%):</p>
+                            
+                            <div class="percentage-controls">
+                                <div class="percentage-control">
+                                    <span class="percentage-label">Preguntas nuevas:</span>
+                                    <input type="range" min="0" max="100" value="80" class="percentage-slider" id="newPercentage">
+                                    <span class="percentage-value" id="newValue">80%</span>
+                                    <input type="number" min="0" max="100" value="80" class="percentage-input" id="newInput">%
+                                </div>
+                                
+                                <div class="percentage-control">
+                                    <span class="percentage-label">Preguntas falladas:</span>
+                                    <input type="range" min="0" max="100" value="15" class="percentage-slider" id="incorrectPercentage">
+                                    <span class="percentage-value" id="incorrectValue">15%</span>
+                                    <input type="number" min="0" max="100" value="15" class="percentage-input" id="incorrectInput">%
+                                </div>
+                                
+                                <div class="percentage-control">
+                                    <span class="percentage-label">Preguntas acertadas:</span>
+                                    <input type="range" min="0" max="100" value="5" class="percentage-slider" id="correctPercentage">
+                                    <span class="percentage-value" id="correctValue">5%</span>
+                                    <input type="number" min="0" max="100" value="5" class="percentage-input" id="correctInput">%
+                                </div>
+                                
+                                <div class="percentage-total" id="percentageTotal">
+                                    Total: 100%
+                                </div>
+                                
+                                <button id="resetPercentages" class="mdc-button reset-percentages">
+                                    <span class="material-icons">restore</span>Restablecer valores por defecto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stats-container">
+                    <h3>Tu Progreso</h3>
+                    <div id="progressStats">Cargando estadísticas...</div>
+                    
+                    <div class="quick-stats">
+                        <div class="stat-box">
+                            <div class="stat-value attempts-stat" id="attemptsCount">0</div>
+                            <div class="stat-label">Intentos</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value correct-stat" id="totalCorrect">0</div>
+                            <div class="stat-label">Acertadas</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value incorrect-stat" id="totalIncorrect">0</div>
+                            <div class="stat-label">Falladas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pie-chart-container">
+                        <div class="pie-chart" id="pieChart"></div>
+                        <div class="pie-legend" id="pieLegend"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="startButton" class="mdc-button mdc-button-contained">
+                    <span class="material-icons">play_arrow</span>Comenzar Examen
+                </button>
+                <button id="resetHistoryButton" class="mdc-button btn-danger">
+                    <span class="material-icons">delete</span>Reiniciar Historial
+                </button>
+            </div>
+        </div>
+        
+        <!-- Exam Screen -->
+        <div id="examContainer" class="screen">
+            <h1>Examen de Enfermería</h1>
+            <div class="timer" id="timer">
+                <span class="material-icons">access_time</span>Tiempo: --:--
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText">Pregunta 1 de 20</div>
+            </div>
+            
+            <div class="question-container">
+                <div class="question-number" id="questionNumber">Pregunta 1</div>
+                <div class="question-text" id="questionText"></div>
+                
+                <div class="options-container" id="optionsContainer"></div>
+                
+                <!-- Recordatorio sobre no penalización -->
+                <div class="no-penalty-reminder">
+                    <span class="material-icons">info</span>
+                    <p><strong>Recuerda:</strong> Las respuestas incorrectas y las no contestadas no penalizan. ¡Contesta todas las preguntas que puedas!</p>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="prevButton" class="mdc-button mdc-button-outlined" disabled>
+                    <span class="material-icons">arrow_back</span>Anterior
+                </button>
+                <button id="nextButton" class="mdc-button mdc-button-contained">
+                    Siguiente<span class="material-icons">arrow_forward</span>
+                </button>
+                <button id="finishButton" class="mdc-button btn-success" style="display: none;">
+                    <span class="material-icons">flag</span>Finalizar Examen
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="resultsContainer" class="screen">
+            <h2>Resultados del Examen</h2>
+            
+            <div class="quick-stats">
+                <div class="stat-box">
+                    <div class="stat-value correct-stat" id="correctCount">0</div>
+                    <div class="stat-label">Correctas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value incorrect-stat" id="incorrectCount">0</div>
+                    <div class="stat-label">Incorrectas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value unanswered-stat" id="unansweredCount">0</div>
+                    <div class="stat-label">Sin responder</div>
+                </div>
+            </div>
+            
+            <div class="score-container">
+                <div class="score" id="score">0.00</div>
+                <div class="score-label">Puntuación sobre 60 puntos</div>
+                <div class="score-explanation">
+                    <p>Fórmula de calificación oficial: <strong>60 × (respuestas correctas / total preguntas)</strong></p>
+                    <p>Las respuestas incorrectas y no contestadas no penalizan.</p>
+                </div>
+            </div>
+            
+            <div class="review-container" id="reviewContainer"></div>
+            
+            <div class="navigation">
+                <button id="restartButton" class="mdc-button mdc-button-contained">
+                    <span class="material-icons">home</span>Volver al Inicio
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="version">Simulador de Examen de Enfermería - Versión 2.2.0</div>
+            <div>Total de intentos: <span id="totalAttempts">0</span></div>
+        </div>
+    </div>
+
+    <!-- Mensajes de advertencia -->
+    <div id="cssWarning" class="warning-message" style="display: none;">
+        <span class="material-icons">warning</span>
+        No se pudo cargar el archivo de estilos. El simulador puede no verse correctamente.
+    </div>
+    
+    <div id="jsWarning" class="warning-message" style="display: none;">
+        <span class="material-icons">warning</span>
+        No se pudo cargar el archivo JavaScript. El simulador no funcionará correctamente.
+    </div>
+    
+    <div id="jsonWarning" class="warning-message" style="display: none;">
+        <span class="material-icons">warning</span>
+        No se pudo cargar el archivo de preguntas. Se usarán preguntas de ejemplo.
+    </div>
+
+    <!-- Mensaje de carga -->
+    <div id="loadingMessage" class="loading-message" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Cargando preguntas...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
